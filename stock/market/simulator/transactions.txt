@@ -7,3 +7,4 @@ gor, bought, 12.00, AAPL
 gor, bought, 1.00, VA
 areg, bought, 1.00, AAPL
 areg, bought, 4.00, TWTR
+gorhayrapetyan, bought, 1.00, AAPL

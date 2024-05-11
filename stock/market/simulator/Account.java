@@ -1,6 +1,5 @@
 package stock.market.simulator;
 
-import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
@@ -8,7 +7,7 @@ import java.util.ArrayList;
  * Represents a user account in the stock market simulation.
  * This class manages the user's account, including their name, cash balance, and holdings of stocks.
  */
-public class Account implements Serializable {
+public class Account {
     private final String accountName;
     private double cash;
     private ArrayList<Stock> heldStocks = new ArrayList<>();
