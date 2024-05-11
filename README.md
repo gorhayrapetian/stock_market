@@ -1,9 +1,10 @@
-Stock Market Simulator
-Stock Market Simulator is a Java console application for simulating stock market trading. It allows users to manage accounts, buy, sell, and trade stocks.
+# Stock Market Simulator
 
-Features
-Account management: Users can create new accounts or log in with existing ones.
-Portfolio display: Users can view their portfolio, including the stocks they own and their current value.
-Stock search: Users can search for stocks by symbol and view their current price.
-Trading: Users can buy, sell, short sell, and buy to cover stocks.
-Persistence: Accounts and stock data are saved to files for persistence between sessions.
+## Description
+This project is a simple console-based stock market simulator that allows users to simulate buying and selling stocks with virtual money. The system supports user account management, stock transactions, and portfolio reviews.
+
+## Features
+- **User Registration and Login:** Users can register and login to manage their virtual stock trading.
+- **Buy Stocks:** Users can buy stocks from a list of available stocks in the virtual market.
+- **Sell Stocks:** Users can sell stocks from their portfolio.
+- **View Portfolio:** Users can view their current holdings, including stock quantities and cash balances.

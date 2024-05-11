@@ -50,49 +50,34 @@ public class Account implements Serializable {
      * @param transactionType The type of transaction ("buy" or "sell").
      */
     public void updateCashBalance(double transactionCash, String transactionType) {
-        switch (transactionType) {
-            case "buy":
-                cash -= transactionCash;
-                break;
-            case "sell":
-                cash += transactionCash;
-                break;
-            default:
-                System.out.println("Error: Invalid transaction type.");
-                break;
+        if ("buy".equals(transactionType)) {
+            cash -= transactionCash;
+        } else if ("sell".equals(transactionType)) {
+            cash += transactionCash;
         }
     }
+
 
     /**
      * Adds a stock to the user's account holdings.
      *
      * @param stock The stock to be added to the account.
-     * @param transactionType The type of transaction ("buy" or "sell").
      */
-    public void addStockToPortfolio(Stock stock, String transactionType) {
+    public void addStockToPortfolio(Stock stock) {
         int existingStockIndex = -1;
         for (int i = 0; i < heldStocks.size(); i++) {
             Stock existingStock = heldStocks.get(i);
-            if (existingStock.getSymbol().equals(stock.getSymbol()) && (existingStock.getType().equals(stock.getType()))) {
+            if (existingStock.getSymbol().equals(stock.getSymbol())) {
                 existingStockIndex = i;
+                break;
             }
         }
         if (existingStockIndex == -1) {
             heldStocks.add(stock);
         } else {
             Stock existingStock = heldStocks.get(existingStockIndex);
-            int updatedQuantity = existingStock.getQuantity() + stock.getQuantity();
-            existingStock.setQuantity(updatedQuantity);
+            existingStock.setQuantity(existingStock.getQuantity() + stock.getQuantity());
         }
-    }
-
-    /**
-     * Removes a stock from the user's account holdings.
-     *
-     * @param index The index of the stock to be removed.
-     */
-    public void deleteStockFromPortfolio(int index) {
-        heldStocks.remove(index);
     }
 
     /**
@@ -104,43 +89,33 @@ public class Account implements Serializable {
         double portfolioValue = calculatePortfolioValue();
         System.out.println("\nAccount Value: $" + decimalFormat.format(portfolioValue) + "   Cash: $" + decimalFormat.format(cash) + "\n");
 
-        int numShorts = 0;
-
         for (Stock stock : heldStocks) {
-            if (!stock.getType().equals("short")) {
-                System.out.println("Stock Symbol: " + stock.getSymbol() + "\n" +
-                        "Price: $" + decimalFormat.format(stock.getPrice()) + "\n" +
-                        "Quantity: " + stock.getQuantity() + "\n" +
-                        "Total: $" + decimalFormat.format(stock.getPrice() * stock.getQuantity()) + "\n");
-            } else {
-                numShorts++;
-            }
-        }
-
-        if (numShorts != 0) {
-            System.out.println("Shorting Stocks");
-            System.out.println("-----------------");
-            for (Stock stock : heldStocks) {
-                if (stock.getType().equals("short")) {
-                    System.out.println("Stock Symbol: " + stock.getSymbol() + "\n" +
-                            "Price: $" + decimalFormat.format(stock.getPrice()) + "\n" +
-                            "Quantity: " + stock.getQuantity() + "\n" +
-                            "Total: $" + decimalFormat.format(stock.getPrice() * stock.getQuantity()) + "\n");
-                }
-            }
+            System.out.println("Stock Symbol: " + stock.getSymbol() + "\n" +
+                    "Price: $" + decimalFormat.format(stock.getPrice()) + "\n" +
+                    "Quantity: " + stock.getQuantity() + "\n" +
+                    "Total: $" + decimalFormat.format(stock.getPrice() * stock.getQuantity()) + "\n");
         }
     }
 
     /**
-     * Reduces the quantity of a stock in the user's account holdings.
+     * Reduces the quantity of a specific stock in the user's account holdings.
      *
-     * @param index The index of the stock.
+     * @param stockToReduce The stock for which the quantity needs to be reduced.
      * @param quantity The quantity to be reduced.
      */
-    public void reduceStockQuantity(int index, int quantity) {
-        Stock stock = heldStocks.get(index);
-        int newQuantity = stock.getQuantity() - quantity;
-        stock.setQuantity(newQuantity);
+    public void reduceStockQuantity(Stock stockToReduce, int quantity) {
+        for (Stock stock : heldStocks) {
+            if (stock.getSymbol().equals(stockToReduce.getSymbol())) {
+                int newQuantity = stock.getQuantity() - quantity;
+                if (newQuantity >= 0) {
+                    stock.setQuantity(newQuantity);
+                } else {
+                    System.out.println("Error: Trying to reduce more shares than are available.");
+                }
+                return;
+            }
+        }
+        System.out.println("Stock not found in the portfolio.");
     }
 
     /**
@@ -157,19 +132,33 @@ public class Account implements Serializable {
     }
 
     /**
-     * Finds the index of a stock in the stocks array.
+     * Checks if the account has enough cash to perform the trade.
      *
-     * @param symbol The symbol of the stock to find.
-     * @param stocks The array of stocks to search.
-     * @param type The type of stock.
-     * @return The index of the stock in the array, or -1 if not found.
+     * @param totalCost the total cost of the trade
+     * @return true if the account has enough cash, false otherwise
      */
-    public int find(String symbol, Stock[] stocks, String type) {
-        for (int i = 0; i < stocks.length; i++) {
-            if ((stocks[i].getSymbol().equals(symbol)) && !(stocks[i].getType().equals(type))) {
-                return i;
-            }
-        }
-        return -1;
+    public boolean hasEnoughCash(double totalCost) {
+        return totalCost <= getCashBalance();
     }
+
+    /**
+     * Checks if the specified stock has enough shares available to be bought.
+     *
+     * @param stock    the stock to check for available shares
+     * @param quantity the quantity of shares to be bought
+     * @return true if there are enough shares available, false otherwise
+     */
+    public boolean sharesAvailable(Stock stock, int quantity) {
+        return (quantity <= stock.getSharesLeft()) && (quantity > 0);
+    }
+
+    /**
+     * Retrieves a copy of the list of stocks currently held in the user's account.
+     *
+     * @return A new {@link ArrayList} containing copies of the {@link Stock} objects held in the account.
+     */
+    public ArrayList<Stock> getHeldStocks() {
+        return new ArrayList<>(heldStocks);
+    }
+
 }

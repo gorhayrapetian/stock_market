@@ -2,99 +2,60 @@ package stock.market.simulator;
 
 import stock.market.simulator.console.StockSimulatorConsole;
 
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.text.DecimalFormat;
-import java.util.Scanner;
 
 /**
- * Represents a selling operation in the stock market simulation.
- * This class allows the user to sell stocks, updating the account's stock holdings and cash balance accordingly.
+ * Handles the selling of stocks within the stock market simulator.
  */
-public class Sell extends Trade {
+public class Sell extends AbstractTransaction {
 
-    DecimalFormat decimalFormat = new DecimalFormat("#.00");
+    private DecimalFormat decimalFormat = new DecimalFormat("#.00");
+    private StockSimulatorConsole simulator;
 
     /**
-     * Constructs a Sell object to facilitate selling stocks.
+     * Constructs a Sell object to facilitate the stock selling process.
      *
-     * @param account The user's account for trading.
+     * @param account     The user's account for trading.
+     * @param stock       The stock to be traded.
+     * @param quantity    The quantity of stock to sell.
+     * @param simulator   The stock simulator to interact with the stock data.
+     * @param fileManager The file manager to handle file operations.
      */
-    public Sell(Account account) {
-        super(account);
-
-        try {
-            Scanner scanner = new Scanner(System.in);
-
-            // Prompt user to enter the stock symbol
-            System.out.println("Enter the stock symbol you would like to sell: ");
-            String stockSymbol = scanner.nextLine();
-
-            // Find the stock index in the account's holdings
-            int stockIndex = account.find(stockSymbol, StockSimulatorConsole.stocks, "");
-
-            if (stockIndex == -1) {
-                System.out.println("Sorry, that stock is not available for trading.");
-
-            } else {
-                Stock stockToTrade = StockSimulatorConsole.stocks[stockIndex];
-
-                // Prompt user to enter the quantity of shares to sell
-                System.out.println("How many shares would you like to sell: ");
-                int sellQuantity = scanner.nextInt();
-
-                // Check if the specified quantity of shares is available for selling
-                if (sharesAvailable(stockToTrade, sellQuantity)) {
-                    double totalPrice = stockToTrade.getPrice() * sellQuantity;
-                    System.out.println("The total value of the sale is: $" + decimalFormat.format(totalPrice));
-
-                    // Update the type of stock transaction to "sell" and adjust the stock holdings and cash balance
-                    stockToTrade.setType("sell");
-                    stockToTrade.updateSharesLeft(sellQuantity, "sell");
-
-                    // Remove the stock from the user's account if all shares are sold; otherwise, reduce the quantity
-                    if (sellQuantity == stockToTrade.getQuantity()) {
-                        account.deleteStockFromPortfolio(stockIndex);
-                    } else {
-                        account.reduceStockQuantity(stockIndex, sellQuantity);
-                    }
-
-                    // Update the user's cash balance
-                    account.updateCashBalance(totalPrice, "sell");
-
-                } else {
-                    System.out.println("Sorry, you do not have enough shares to sell.");
-                }
-            }
-        } catch (Exception ex) {
-            System.out.println("Error: The trade could not be completed.");
-        }
-
-        writeTransaction("sold");
-    }
-
-    private void writeTransaction(String action) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter("transactions.txt", true))) {
-            writer.println(account.getAccountName() + ", " + action + " stock");
-        } catch (java.io.IOException e) {
-            throw new RuntimeException(e);
-        }
+    public Sell(Account account, Stock stock, int quantity, StockSimulatorConsole simulator, FileManager fileManager) {
+        super(account, stock, quantity, fileManager);
+        this.simulator = simulator;
     }
 
     /**
-     * Checks if the specified quantity of shares is available for selling.
-     * Overrides the sharesAvailable method in the Trade class.
+     * Calculates the total transaction amount by multiplying the price of the stock with the quantity being traded.
      *
-     * @param stock    The stock to check for available shares.
-     * @param quantity The quantity of shares to be sold.
-     * @return true if there are enough shares available for selling, otherwise false.
+     * @return The total transaction amount
      */
     @Override
-    public boolean sharesAvailable(Stock stock, int quantity) {
-        if (stock.getType().equals("buy")) {
-            return (quantity + stock.getSharesLeft()) <= stock.getTotalShares();
+    protected double calculateTransactionAmount() {
+        return stock.getPrice() * quantity;
+    }
+
+    /**
+     * Executes the sell transaction. Checks if there are enough shares available for sale and calculates the total price.
+     * If conditions are met, updates the stock's available shares, account's cash balance, stock quantity in the portfolio,
+     * and writes the transaction to a file.
+     */
+    @Override
+    public void execute() {
+        if (account.sharesAvailable(stock, quantity)) {
+            double totalPrice = calculateTransactionAmount();
+            if (totalPrice > 0) {
+                System.out.println("The total value of the sale is: $" + decimalFormat.format(totalPrice));
+                stock.updateSharesLeft(-quantity);  // Assuming this method decrements shares available
+                account.updateCashBalance(totalPrice, "sell");
+                account.reduceStockQuantity(stock, quantity);
+                fileManager.writeTransaction(account.getAccountName(), "sold", quantity, stock.getSymbol(), totalPrice);
+            } else {
+                System.out.println("Error: Negative value encountered.");
+            }
         } else {
-            return false;
+            System.out.println("Sorry, you do not have enough shares to sell.");
         }
     }
 }

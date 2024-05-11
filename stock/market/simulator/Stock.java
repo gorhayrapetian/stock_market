@@ -13,7 +13,6 @@ public class Stock implements Serializable {
     private final int totalShares;
     private int sharesLeft;
     private int quantity;
-    private String type;
     private double currentPrice;
 
     /**
@@ -28,7 +27,6 @@ public class Stock implements Serializable {
         this.currentPrice = currentPrice;
         this.totalShares = totalShares;
         this.sharesLeft = totalShares;
-        this.type = "stock";
     }
 
 
@@ -80,24 +78,6 @@ public class Stock implements Serializable {
     }
 
     /**
-     * Returns the type of the stock.
-     *
-     * @return The type of the stock.
-     */
-    public String getType() {
-        return type;
-    }
-
-    /**
-     * Sets the type of the stock.
-     *
-     * @param type The type of the stock.
-     */
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    /**
      * Returns the number of shares left in the open market for trading.
      *
      * @return The number of shares left in the open market.
@@ -122,9 +102,9 @@ public class Stock implements Serializable {
      * @param transaction The type of transaction (e.g., "buy", "sell").
      */
     public void updateSharesLeft(int quantity, String transaction) {
-        if (transaction.equals("buy") || transaction.equals("cover")) {
+        if (transaction.equals("buy")) {
             sharesLeft -= quantity;
-        } else if (transaction.equals("sell") || transaction.equals("short")) {
+        } else if (transaction.equals("sell")) {
             sharesLeft += quantity;
         }
     }
